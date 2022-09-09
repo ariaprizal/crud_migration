@@ -1,6 +1,7 @@
 const db = require("./../../models");
 const Writer = db.Writer;
 const Op = db.Sequelize.Op;
+const writerRepo = require("./../repository/writer.repository");
 
 /**
  * Create Writer Function
@@ -10,13 +11,6 @@ const Op = db.Sequelize.Op;
  */
 exports.createWriter = async (req, res) =>
 {
-    // Validate request
-    if (!req.body.userName) {
-        res.status(400).send({
-          message: "Content can not be empty! "
-        });
-        return;
-    }
     // Create a Tutorial
     const writer = {
         userName: req.body.userName,
@@ -24,21 +18,22 @@ exports.createWriter = async (req, res) =>
         age: req.body.age,
     };
 
-    // Save Tutorial in the database
-    try {
-        const saveWriter = await Writer.create(writer);
-        res.json({
-            "status": 200,
-            "message": "Success Create Writer",
-            "data": saveWriter
-        });
-    }
-    catch (error)
+    const resultCreate = await writerRepo.save(writer, res);
+    if (resultCreate.success === true)
     {
         res.json({
-            "message": error.message,
-            "data": null
-        });
+            "status": 200,
+            "message": `SUCCESFULLY CREATE WRITER FOR THIS USER NAME ${writer.userName}`,
+            "data": writer
+        }); 
+    }
+    else
+    {
+        res.json({
+            "status": 400,
+            "message": `FAILED TO CREATE WRITER FOR THIS USER NAME ${writer.userName} BECAUSE ${resultCreate.message}`,
+            "data": writer
+        });  
     }
 }
 
@@ -50,30 +45,31 @@ exports.createWriter = async (req, res) =>
 exports.findAllWriter = async (req, res) => {
     try
     {
-        const resultWriter = await Writer.findAll({
-            include : ["list_article"]
-        });
-        if (resultWriter.length !== 0)
+        const resultWriter = await writerRepo.findAll();
+
+        if (resultWriter.length !== 0 )
         {
             res.json({
                 "status": 200,
-                "message": "Success Get All Writer",
+                "message": `SUCCESFULLY GET ALL DATA`,
                 "data": resultWriter
-            });   
+            }); 
         }
         else
         {
             res.json({
                 "status": 404,
-                "message": "Failed Get All Writer Because Writer Is empty",
-                "data": resultWriter
+                "message": `FAILED TO GET ALL DATA BECAUSE WRITER DATA IS EMPTY`,
+                "data": null
             });  
         }
+        
     }
     catch (error)
     {
         res.json({
-            "message": error.message,
+            "status": 400,
+            "message": `FAILED TO GET ALL DATA BECAUSE ${error.message}`,
             "data": null
         });
     }
@@ -85,35 +81,34 @@ exports.findAllWriter = async (req, res) => {
  * @param res 
  */
 exports.findById = async (req, res) => {
+    const id = req.params.id
     try
     {
-        const id = req.params.id
-        const resultWriter = await Writer.findByPk(id, {
-            include : ["list_article"]
-        });
+        const resultWriter = await writerRepo.findById(id);
         if (resultWriter !== null)
         {
             res.json({
                 "status": 200,
-                "message": `Success Get Writer For This Id ${id}`,
+                "message": `SUCCESFULLY GET DATA FOR THIS ID ${id}`,
                 "data": resultWriter
-            });   
+            }); 
         }
         else
         {
             res.json({
                 "status": 404,
-                "message": `Failed Get Writer Because This ID ${id} Not Found`,
-                "data": resultWriter
+                "message": `FAILED TO GET DATA FOR THIS ID ${id} BECAUSE DATA NOT FOUND`,
+                "data": null
             });  
         }
     }
     catch (error)
     {
         res.json({
-            "message": error.message,
+            "status": 400,
+            "message": `FAILED TO GET DATA FOR THIS ID ${id} BECAUSE ${error.message}`,
             "data": null
-        });
+        }); 
     }
 }
 
@@ -123,35 +118,34 @@ exports.findById = async (req, res) => {
  * @param res 
  */
 exports.updateWriter = async (req, res) => {
+    const id = req.params.id;
     try
     {
-        const id = req.params.id;
-        const resultUpdate = await Writer.update(req.body, {
-            where: {id : id}
-        })
-        if (resultUpdate[0] !== 0)
+        const resultUpdate = await writerRepo.update(req.body, id);
+        if (resultUpdate.success === true)
         {
             res.json({
                 "status": 200,
-                "message": `Successfully Update Writer For This Id ${id}`,
+                "message": `SUCCESFULLY UPDATE DATA THIS ID ${id}`,
                 "data": req.body
-            });  
+            }); 
         }
         else
         {
             res.json({
                 "status": 400,
-                "message": `Failed Update Writer For This Id ${id}`,
+                "message": `FAILED TO UPDATE DATA THIS ID ${id}`,
                 "data": req.body
-            }); 
+            });  
         }
     }
     catch (error)
     {
         res.json({
-            "message": error.message,
-            "data": null
-        });
+            "status": 400,
+            "message": `FAILED TO UPDATE DATA THIS ID ${id} BECAUSE ${error.message}`,
+            "data": req.body
+        }); 
     }
 }
 
@@ -161,33 +155,34 @@ exports.updateWriter = async (req, res) => {
  * @param res 
  */
 exports.deleteWriter = async (req, res) => {
+    const id = req.params.id;
     try
     {
-        const id = req.params.id;
-        const resultDelete = await Writer.destroy({
-            where: {id : id}
-        })
+        const resultDelete = await writerRepo.delete(id);
         if (resultDelete !== 0)
         {
             res.json({
                 "status": 200,
-                "message": `Successfully Delete Writer For This Id ${id}`
-            });  
+                "message": `SUCCESFULLY DELETE DATA THIS ID ${id}`,
+                "data": null
+            }); 
         }
         else
         {
             res.json({
                 "status": 400,
-                "message": `Failed Delete Writer For This Id ${id}`
+                "message": `FAILED DELETE DATA THIS ID ${id}`,
+                "data": null
             }); 
         }
     }
     catch (error)
     {
         res.json({
-            "message": error.message,
+            "status": 400,
+            "message": `FAILED DELETE DATA THIS ID ${id} BECAUSE ${error.message}`,
             "data": null
-        });
+        }); 
     }
 }
 
@@ -196,73 +191,35 @@ exports.deleteWriter = async (req, res) => {
  * @param req 
  * @param res 
  */
-exports.deleteAllWriter = async (req, res) => {
+exports.deleteAllWriter = async (req, res) =>
+{
     try
     {
-        const resultDelete = await Writer.destroy({
-            where: {},
-            truncate: false
-        })
+        const resultDelete = await writerRepo.deleteAll();
         if (resultDelete !== 0)
         {
             res.json({
                 "status": 200,
-                "message": `Successfully Delete All Writer Data`
-            });  
+                "message": `SUCCESFULLY DELETE ALL DATA`,
+                "data":  null
+            });   
         }
         else
         {
             res.json({
                 "status": 400,
-                "message": `Failed Delete All Writer Data`
+                "message": `FAILED DELETE ALL DATA WRITTER`,
+                "data" : null
             }); 
         }
     }
     catch (error)
     {
         res.json({
-            "message": error.message,
+            "status": 400,
+            "message": `FAILED DELETE ALL DATA WRITTER BECAUSE ${error.message}`,
             "data": null
-        });
+        }); 
     }
 }
 
-/**
- * Function Find All Writer By Category
- * @param req 
- * @param res 
- */
-exports.findWriterByCategory = async (req, res) => {
-    try
-    {
-        const category = req.params.category;
-        const resultWriter = await Writer.findAll({
-            where: { category: category },
-            include : ["list_article"]
-        });
-        if (resultWriter.length !== 0)
-        {
-            res.json({
-                "status": 200,
-                "message": `Successfully Find Writer By category ${category}`,
-                "data": resultWriter
-            });
-        }
-        else
-        {
-            res.json({
-                "status": 404,
-                "message": `Failed Find Writer By categories ${category}`,
-                "data": null
-            }); 
-        }
-    }
-    catch (error)
-    {
-        res.json({
-            "message": error.message,
-            "data": null
-        });
-    }
-
-}

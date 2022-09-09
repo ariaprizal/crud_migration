@@ -37,12 +37,7 @@ module.exports = app => {
      * @api DELETE /api/writers/ 
      */
     router.delete('/', writer.deleteAllWriter);
-    
-    /**
-     * Router Find All Writers By Categories
-     * @api GET /api/writers/:category
-     */
-    router.get('/category/:category', writer.findWriterByCategory);
+
     
     // Route Group
     app.use('/api/writers', router);

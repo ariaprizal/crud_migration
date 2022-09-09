@@ -1,5 +1,6 @@
 const db = require("./../../models");
 const Article = db.Article;
+const articleRepo = require("./../repository/article.repository");
 
 /**
  * Function Create Article
@@ -7,25 +8,40 @@ const Article = db.Article;
  * @param res 
  */
 exports.createArticle = async (req, res) => {
-    try {
-        let article = {
-            title: req.body.title,
-            body_text: req.body.body_text,
-            writerId: req.body.writerId
-        }
-        const createArticle = await Article.create(article);
+    
+    let article = {
+        title: req.body.title,
+        body_text: req.body.body_text,
+        writerId: req.body.writerId,
+        category: req.body.category
+    }
 
-        res.json({
-            "status": 200,
-            "message": "Success Create Article",
-            "data": createArticle
-        });
+    try {
+        const resultCreate = await articleRepo.save(article);
+
+        if (resultCreate.success === true)
+        {
+            res.json({
+                "status": 200,
+                "message": `SUCCESSFULLY CREATE ARTICLE FOR THIS TITLE ${article.title}`,
+                "data": article
+            }); 
+        }
+        else
+        {
+            res.json({
+                "status": 400,
+                "message": `FAILED TO CREATE ARTICLE FOR THIS TITLE ${article.title} BECAUSE ${resultCreate.message}`,
+                "data": article
+            });  
+        }
     }
     catch (error) {
         res.json({
-            "message": "Failed Create Article",
-            "data": error.message || "Something Errors"
-        });
+            "status": 400,
+            "message": `FAILED TO CREATE ARTICLE FOR THIS TITLE ${article.title} BECAUSE  ${error.message}`,
+            "data": null
+        }); 
     }
 };
 
@@ -37,30 +53,31 @@ exports.createArticle = async (req, res) => {
 exports.findAllArticle = async (req, res) => {
     try
     {
-        const resultArticles = await Article.findAll();
+        const resultArticles = await articleRepo.findAll();
         if (resultArticles.length !== 0)
         {
             res.json({
                 "status": 200,
-                "message": "Success Get All Article",
+                "message": `SUCCESSFULLY GET ALL ARTICLE `,
                 "data": resultArticles
-            });   
+            }); 
         }
         else
         {
             res.json({
                 "status": 404,
-                "message": "Failed Get All Article Because Article Is empty",
-                "data": resultArticles
+                "message": `FAILED TO GET ALL ARTICLE BECAUSE ARTICLE IS EMPTY`,
+                "data": null
             });  
         }
     }
     catch (error)
     {
         res.json({
-            "message": error.message,
+            "status": 400,
+            "message": `FAILED TO GET ALL ARTICLE BECAUSE ${error.message}`,
             "data": null
-        });
+        }); 
     }
 };
 
@@ -70,31 +87,32 @@ exports.findAllArticle = async (req, res) => {
  * @param res 
  */
 exports.findById = async (req, res) => {
+    const id = req.params.id;
     try
     {
-        const id = req.params.id;
-        const resultArticle = await Article.findByPk(id);
+        const resultArticle = await articleRepo.findById(id);
         if (resultArticle !== null)
         {
             res.json({
                 "status": 200,
-                "message": `Success Get Article For This Id ${id}`,
+                "message": `SUCCESSFULLY GET ARTICLE FOR THIS ID ${id} `,
                 "data": resultArticle
-            });   
+            }); 
         }
         else
         {
             res.json({
                 "status": 404,
-                "message": `Failed Get Article Because This ID ${id} Not Found`,
-                "data": resultArticle
+                "message": `FAILED TO GET ARTICLE FOR THIS ID ${id} BECAUSE ARTICLE NOT FOUND`,
+                "data": null
             });  
         }
     }
     catch (error)
     {
         res.json({
-            "message": error.message,
+            "status": 400,
+            "message": `FAILED TO GET ARTICLE FOR THIS ID ${id} BECAUSE ${error.message}`,
             "data": null
         });  
     }
@@ -106,31 +124,32 @@ exports.findById = async (req, res) => {
  * @param res 
  */
 exports.updateArticle = async (req, res) => {
+    const id = req.params.id;
     try {
-        const id = req.params.id;
-        const resultUpdate = await Article.update(req.body, {
-            where: { id: id }
-        })
-        if (resultUpdate[0] !== 0) {
+        const resultUpdate = await articleRepo.update(req.body, id);
+        if (resultUpdate.success !== false)
+        {
             res.json({
                 "status": 200,
-                "message": `Successfully Update Article For This Id ${id}`,
+                "message": `SUCCESSFULLY UPDATE ARTICLE FOR THIS ID ${id} `,
                 "data": req.body
-            });
+            }); 
         }
-        else {
+        else
+        {
             res.json({
                 "status": 400,
-                "message": `Failed Update Article For This Id ${id}`,
+                "message": `FAILED TO UPDATE ARTICLE FOR THIS ID ${id} BECAUSE ${resultUpdate.message}`,
                 "data": null
-            });
+            });  
         }
     }
     catch (error) {
         res.json({
-            "message": error.message,
-            "data": null
-        });
+                "status": 400,
+                "message": `FAILED TO UPDATE ARTICLE FOR THIS ID ${id} BECAUSE ${error.message}`,
+                "data": null
+            });
     }
 };
 
@@ -140,29 +159,32 @@ exports.updateArticle = async (req, res) => {
  * @param res 
  */
 exports.deleteArticleById = async (req, res) => {
+    const id = req.params.id;
     try {
-        const id = req.params.id;
-        const resultDelete = await Article.destroy({
-            where: { id: id }
-        })
-        if (resultDelete !== 0) {
+        const resultDelete = await articleRepo.delete(id);
+        if (resultDelete !== 0)
+        {
             res.json({
                 "status": 200,
-                "message": `Successfully Delete Article For This Id ${id}`
-            });
+                "message": `SUCCESSFULLY DELETE ARTICLE FOR THIS ID ${id} `,
+                "data": req.body
+            }); 
         }
-        else {
+        else
+        {
             res.json({
                 "status": 400,
-                "message": `Failed Delete Article For This Id ${id}`
-            });
+                "message": `FAILED TO DELETE ARTICLE FOR THIS ID ${id}`,
+                "data": null
+            });  
         }
     }
     catch (error) {
         res.json({
-            "message": error.message,
+            "status": 400,
+            "message": `FAILED TO DELETE ARTICLE FOR THIS ID ${id} BECAUSE ${error.message}`,
             "data": null
-        });
+        }); 
     }
 };
 
@@ -173,27 +195,67 @@ exports.deleteArticleById = async (req, res) => {
  */
 exports.deleteAllArticle = async (req, res) => {
     try {
-        const resultDelete = await Article.destroy({
-            where: {},
-            truncate: false
-        })
-        if (resultDelete !== 0) {
+        const resultDelete = await articleRepo.deleteAll();
+        if (resultDelete !== 0)
+        {
             res.json({
                 "status": 200,
-                "message": `Successfully Delete All Article Data`
+                "message": `SUCCESSFULLY DELETE ALL ARTICLE`,
+                "data": req.body
+            }); 
+        }
+        else
+        {
+            res.json({
+                "status": 400,
+                "message": `FAILED TO DELETE ALL ARTICLE`,
+                "data": null
+            });  
+        }
+    }
+    catch (error) {
+        res.json({
+            "status": 400,
+            "message": `FAILED TO DELETE ALL ARTICLE BECAUSE ${error.message}`,
+            "data": null
+        }); 
+    }
+};
+
+
+/**
+ * Function Find All Article By Category
+ * @param req 
+ * @param res 
+ */
+ exports.findWriterByCategory = async (req, res) => {
+    const body = req.body.category;
+    const category = body.toUpperCase();
+    try {
+        const resultWriter = await Article.findAll({
+            where: { category: category }
+        });
+        if (resultWriter.length !== 0) {
+            res.json({
+                "status": 200,
+                "message": `SUCCESFULLY GET ALL DATA WITH CATEGORY ${category}`,
+                "data": resultWriter
             });
         }
         else {
             res.json({
-                "status": 400,
-                "message": `Failed Delete All Article Data`
+                "status": 404,
+                "message": `FAILED TO GET ALL DATA WITH CATEGORY ${category} BECAUSE WRITER DATA IS EMPTY`,
+                "data": null
             });
         }
     }
     catch (error) {
         res.json({
-            "message": error.message,
+            "status": 404,
+            "message": `FAILED TO GET ALL DATA WITH CATEGORY ${category} BECAUSE ${error.message}`,
             "data": null
         });
     }
+
 };
