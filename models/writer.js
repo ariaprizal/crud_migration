@@ -15,9 +15,15 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Writer.init({
-    userName: DataTypes.STRING,
+    userName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     address: DataTypes.STRING,
-    age: DataTypes.INTEGER,
+    age: {
+      type: DataTypes.INTEGER,
+      isNumeric : true
+    }
   }, {
     sequelize,
     modelName: 'Writer',

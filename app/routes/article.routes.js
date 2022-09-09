@@ -39,5 +39,11 @@ module.exports = app => {
      */
     router.delete("/", Article.deleteAllArticle);
 
+    /**
+     * Router Find All Article By Categories
+     * @api POST /api/article/category
+     */
+     router.post('/category', Article.findWriterByCategory);
+
     app.use("/api/article", router);
 }
