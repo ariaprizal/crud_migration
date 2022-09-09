@@ -1,0 +1,9 @@
+{
+  "development": {
+    "username": "root",
+    "password": "",
+    "database": "dbcrud",
+    "host": "localhost",
+    "dialect": "mysql"
+  }
+}
